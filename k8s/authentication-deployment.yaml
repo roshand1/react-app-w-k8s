@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: authentication-deployment
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      component: authentication
+  template:
+    metadata:
+      labels:
+        component: authentication
+    spec:
+      containers:
+        - name: client
+          image: roshand1/multi-node-auth-service
+          env:
+            - name: SQL_Host
+              value: 'pes-sqls-hgmd'
+            - name: sqlpassword
+              valueFrom:
+                secretKeyRef:
+                  name: pesdbpassword
+                  key: sqlpassword
+          ports:
+            - containerPort: 5000

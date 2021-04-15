@@ -1,0 +1,30 @@
+# Specify a base image
+# https://hub.docker.com/_/node
+FROM node:14.15.1-alpine
+
+WORKDIR /usr/app
+
+COPY ./ ./
+
+# Copy package.json file
+# npm install only worries about changes in package.json file
+# therefore when you make anychanges in other folder you don't need
+# to reinstall all the necessary packages. This change will make
+# build faster.
+COPY ./package.json ./
+# Install some dependencies
+RUN npm install
+
+# This will run webpack to create a bundle like it does in our local machine
+RUN npm run build
+
+# Copy your project file
+COPY ./ ./
+
+#Default command
+CMD ["npm", "start"]
+
+# This file uses Express server to host app.
+# This is just to show we could use express server to host our app.
+# However, if it is static website that does not have to much logic in 
+# backend then, it is recomended to use nginx like the Dockerfile to host your app
