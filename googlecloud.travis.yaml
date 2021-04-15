@@ -1,0 +1,42 @@
+sudo:required
+services:
+  - docker
+env:
+  global:
+    # GOOGLE CLOUD CLI does not allow message as we don't have ability to interact in travis
+    - CLOUDSDK_CORE-DISABLE_PROMPTS=1
+    - SHA=$(git rev-parse HEAD)
+before_install:
+# install google sdk
+# this will take encrypted file dycrypd and use in authentication
+  - openssl aes-256-cbc -K $encrypted
+  - curl https://sdk.cloud.google.com | bash > /dev/null;
+  - source $HOME/google-cloud-sdk/path.bash.inc
+  - gcloud components update kubectl
+  # add authentication
+  - gcloud auth activate-service-account --key-file service-account.json
+  # in order to connect to google cloud you will have to download credentials from google cloud
+  # in a json format. and Install travis cli in your machine, and upload encrypted format of 
+  # that json file that has google credentials. save file name as service-account.json 
+  # (you can give any name as long as it matches with upload script)
+  # travis login
+  # travis encrypt-file service-account.json -r roshand1/multi-reactapp (imagename)
+  # this will create encrypted file add this file in git repository.
+  - gcloud config set project <projectname>
+  - gcloud config set compute/<zone-name>
+  - gcloud container clusters get-credentials multi-cluster
+  
+  # Run test
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdn
+  - docker build -t roshand/react-test -f ./client/Dockerfile.dev ./client
+ 
+ script:
+   - docker run roshand1/react-test npm test -- --coverage
+
+   # There is no built in kubernetes deployment in travis. We will need to create our own script
+deploy:
+  provider: script
+  # use this deploy .sh file to deploy file. Potentially this could be used for other cloud service as well
+  script: bash ./deploy.sh
+  on:
+    branch: master
